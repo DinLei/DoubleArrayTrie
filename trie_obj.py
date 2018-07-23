@@ -9,12 +9,13 @@ from utils.util import TreeSet
 
 
 class AbstractDoubleArrayTrie:
+    BASE_CODE = 5
     LEAF_BASE_VALUE = -2
     ROOT_CHECK_VALUE = -3
     EMPTY_VALUE = -1
     INITIAL_ROOT_BASE = 1
     alphabet_dict = dict()
-    index_alphabet = dict()
+    # index_alphabet = dict()
 
     def __init__(self, phrase_list):
         self.init_alphabet_dict(phrase_list)
@@ -24,8 +25,8 @@ class AbstractDoubleArrayTrie:
         for phrase in phrase_list:
             alphabets.update(str(phrase))
         for ind, ele in enumerate(alphabets):
-            self.alphabet_dict[ele] = ind
-            self.index_alphabet[ind] = ele
+            self.alphabet_dict[ele] = ind + self.BASE_CODE
+            # self.index_alphabet[ind] = ele
 
     def add2trie(self, word):
         changed = False
@@ -34,7 +35,7 @@ class AbstractDoubleArrayTrie:
         words_codes = [self.alphabet_dict[x] for x in word]
         while i < len(words_codes):
             assert state >= 0
-            assert self.get_base(state) >= 0
+            # assert self.get_base(state) >= 0
             c = words_codes[i]
             transition = self.get_base(state) + c
             assert transition >= 0
@@ -156,6 +157,10 @@ class DoubleArrayTrieImp1(AbstractDoubleArrayTrie):
 
         self.ensure_reachable_index(len(self.alphabet_dict))
 
+    def train(self, words):
+        for wi in words:
+            self.add2trie(wi)
+
     def ensure_reachable_index(self, transition):
         if self.get_size() <= transition:
             diff = transition - self.get_size() + 1
@@ -267,12 +272,7 @@ class DoubleArrayTrieImp1(AbstractDoubleArrayTrie):
         return len(self.base)
 
     def get_base(self, position):
-        try:
-            return self.base[position]
-        except:
-            print("base: {}".format(self.base))
-            print("base length: {}".format(len(self.base)))
-            raise Exception
+        return self.base[position]
 
     def get_check(self, position):
         return self.check[position]

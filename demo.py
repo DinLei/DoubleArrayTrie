@@ -17,6 +17,7 @@ if __name__ == "__main__":
 
     dat.add2trie("today")
     dat.add2trie("swim")
+    dat.add2trie("swimming")
     dat.add2trie("hate")
     dat.add2trie("win")
 
