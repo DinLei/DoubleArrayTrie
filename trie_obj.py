@@ -208,37 +208,71 @@ class DoubleArrayTrieImp1(AbstractDoubleArrayTrie):
 
     def fuzzy_search(self, chars, tol=1):
         state = 0
+        transition = 0
         candidates = set()
         if not chars:
             return candidates
         else:
-            tmp_queue = list((chars, "", tol, state))
+            tmp_queue = list([(chars, "", tol, state, transition)])
             while tmp_queue:
-                chars, path, tol, state = tmp_queue.pop(0)
+                chars, path, tol, state, transition = tmp_queue.pop(0)
+                # print("{}\t{}\t{}\t{}\t{}".format(chars, path, tol, state, transition))
                 if not chars:
-                    candidates.add(path)
-                    if tol > 0:
+                    assert state > 0
+                    if not self.if_legal(transition=transition, state=state):
+                        continue
+                    if self.get_base(transition) == self.LEAF_BASE_VALUE:
+                        candidates.add(path)
+                    elif tol > 0:
                         for e, c in self.alphabet_dict.items():
-                            tmp_next = self.get_base(state) + c
-                            if tmp_next < self.get_size() and self.get_check(tmp_next) == state:
-                                tmp_queue.append(("", path+e, tol-1, tmp_next))
+                            tmp_next = self.get_base(transition) + c
+                            if self.if_legal(state=transition, transition=tmp_next):
+                                tmp_queue.append(("", path+e, tol-1, transition, tmp_next))
+                    else:
+                        continue
                 else:
-                    transition = self.get_base(state) + self.alphabet_dict[chars[0]]
-                    if transition < self.get_size() and self.get_check(transition) == state:
-                        tmp_queue.append((chars[1:], path+chars[0], tol))
+                    tmp_next0 = self.get_base(transition) + self.alphabet_dict[chars[0]]
+                    if self.if_legal(state=transition, transition=tmp_next0):
+                        tmp_queue.append((chars[1:], path+chars[0], tol, transition, tmp_next0))
                     if tol > 0:
                         for e, c in self.alphabet_dict.items():
-                            if e == chars[0]:
-                                continue
-                            tmp_next = self.get_base(state) + c
-                            if tmp_next < self.get_size() and self.get_check(tmp_next) == state:
-                                tmp_queue.append((chars[1:], path+e, tol-1, tmp_next))
+                            tmp_next1 = self.get_base(transition) + c
+                            if self.if_legal(state=transition, transition=tmp_next1):
+                                if e != chars[0]:
+                                    # 替换操作
+                                    tmp_queue.append((chars[1:], path + e, tol - 1, transition, tmp_next1))
+                                # 插入操作
+                                tmp_queue.append((chars, path+e, tol-1, transition, tmp_next1))
+                        if len(chars) > 1:
+                            # 删除一个字符操作
+                            tmp_next_grandson = self.get_base(transition) + self.alphabet_dict[chars[1]]
+                            if self.if_legal(state=transition, transition=tmp_next_grandson):
+                                tmp_queue.append((chars[1:], path, tol-1, transition, tmp_next_grandson))
+                                # 交换操作
+                                tmp_queue.append((chars[1]+chars[0]+chars[2:], path, tol-1, transition, tmp_next_grandson))
+                        elif self.get_base(transition) == self.LEAF_BASE_VALUE:
+                            # 删除到底操作
+                            if len(chars) == tol:
+                                tmp_queue.append((chars[1:], path, 0, state, transition))
+            return candidates
+
+    def if_legal(self, transition, state):
+        if transition >= self.get_size():
+            return False
+        if self.get_check(transition) != state:
+            return False
+        return True
 
     def get_size(self):
         return len(self.base)
 
     def get_base(self, position):
-        return self.base[position]
+        try:
+            return self.base[position]
+        except:
+            print("base: {}".format(self.base))
+            print("base length: {}".format(len(self.base)))
+            raise Exception
 
     def get_check(self, position):
         return self.check[position]
