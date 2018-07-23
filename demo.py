@@ -7,7 +7,7 @@
 
 if __name__ == "__main__":
 
-    from trie_obj import DoubleArrayTrieImp1
+    from double_array_trie import DoubleArrayTrieImp1
 
     examples = ["hello", "world", "a", "beautiful", "day",
                 "see", "you", "tomorrow", "goodbye", "tonight",
