@@ -14,10 +14,10 @@ class AbstractDoubleArrayTrie:
     ROOT_CHECK_VALUE = -3
     EMPTY_VALUE = -1
     INITIAL_ROOT_BASE = 1
-    alphabet_dict = dict()
-    # index_alphabet = dict()
 
     def __init__(self, phrase_list):
+        self.alphabet_dict = dict()
+        # self.index_alphabet = dict()
         self.init_alphabet_dict(phrase_list)
 
     def init_alphabet_dict(self, phrase_list):
@@ -146,11 +146,11 @@ class AbstractDoubleArrayTrie:
 
 
 class DoubleArrayTrieImp1(AbstractDoubleArrayTrie):
-    base = list()
-    check = list()
 
     def __init__(self, phrase_list):
         super(DoubleArrayTrieImp1, self).__init__(phrase_list)
+        self.base = list()
+        self.check = list()
         self.base.append(self.INITIAL_ROOT_BASE)
         self.check.append(self.ROOT_CHECK_VALUE)
         self.free_positions = TreeSet()
@@ -236,29 +236,32 @@ class DoubleArrayTrieImp1(AbstractDoubleArrayTrie):
                     else:
                         continue
                 else:
-                    tmp_next0 = self.get_base(transition) + self.alphabet_dict[chars[0]]
-                    if self.if_legal(state=transition, transition=tmp_next0):
-                        tmp_queue.append((chars[1:], path+chars[0], tol, transition, tmp_next0))
-                    if tol > 0:
-                        for e, c in self.alphabet_dict.items():
-                            tmp_next1 = self.get_base(transition) + c
-                            if self.if_legal(state=transition, transition=tmp_next1):
-                                if e != chars[0]:
-                                    # 替换操作
-                                    tmp_queue.append((chars[1:], path + e, tol - 1, transition, tmp_next1))
-                                # 插入操作
-                                tmp_queue.append((chars, path+e, tol-1, transition, tmp_next1))
-                        if len(chars) > 1:
-                            # 删除一个字符操作
-                            tmp_next_grandson = self.get_base(transition) + self.alphabet_dict[chars[1]]
-                            if self.if_legal(state=transition, transition=tmp_next_grandson):
-                                tmp_queue.append((chars[1:], path, tol-1, transition, tmp_next_grandson))
-                                # 交换操作
-                                tmp_queue.append((chars[1]+chars[0]+chars[2:], path, tol-1, transition, tmp_next_grandson))
-                        elif self.get_base(transition) == self.LEAF_BASE_VALUE:
-                            # 删除到底操作
-                            if len(chars) == tol:
-                                tmp_queue.append((chars[1:], path, 0, state, transition))
+                    if chars[0] in self.alphabet_dict:
+                        tmp_next0 = self.get_base(transition) + self.alphabet_dict[chars[0]]
+                        if self.if_legal(state=transition, transition=tmp_next0):
+                            tmp_queue.append((chars[1:], path+chars[0], tol, transition, tmp_next0))
+                    else:
+                        if tol > 0:
+                            for e, c in self.alphabet_dict.items():
+                                tmp_next1 = self.get_base(transition) + c
+                                if self.if_legal(state=transition, transition=tmp_next1):
+                                    if e != chars[0]:
+                                        # 替换操作
+                                        tmp_queue.append((chars[1:], path + e, tol - 1, transition, tmp_next1))
+                                    # 插入操作
+                                    tmp_queue.append((chars, path+e, tol-1, transition, tmp_next1))
+                            if len(chars) > 1:
+                                if chars[1] in self.alphabet_dict:
+                                    # 删除一个字符操作
+                                    tmp_next_grandson = self.get_base(transition) + self.alphabet_dict[chars[1]]
+                                    if self.if_legal(state=transition, transition=tmp_next_grandson):
+                                        tmp_queue.append((chars[1:], path, tol-1, transition, tmp_next_grandson))
+                                        # 交换操作
+                                        tmp_queue.append((chars[1]+chars[0]+chars[2:], path, tol-1, transition, tmp_next_grandson))
+                            elif self.get_base(transition) == self.LEAF_BASE_VALUE:
+                                # 删除到底操作
+                                if len(chars) == tol:
+                                    tmp_queue.append((chars[1:], path, 0, state, transition))
             return candidates
 
     def if_legal(self, transition, state):
@@ -293,3 +296,11 @@ class DoubleArrayTrieImp1(AbstractDoubleArrayTrie):
 
     def update_child_move(self, state, word_code, new_location):
         assert self.get_check(self.get_base(state)+word_code) == state
+
+
+if __name__ == "__main__":
+    from utils.io_util import load_pickle
+    # from utils.trie_obj import DoubleArrayTrieImp1
+    a1 = load_pickle("../data/01154453.city")
+    dat = DoubleArrayTrieImp1(a1)
+    dat.train(a1)
